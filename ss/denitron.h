@@ -2,11 +2,9 @@
 #define DENITRON_H
 
 #include "../include/shurix.h"
+#include "../lib/string.h"
 
-int denitron_validate(const char *name, const char *dest, const char *intent);
-void denitron_register(uint32_t pid, const char *name, const char *dest, const char *intent);
-void denitron_destroy(uint32_t pid);
-void denitron_scan_all(void);
-void denitron_status(void);
+size_t denitron_ray(unsigned int ram_size_bytes, const unsigned char* signature, size_t sig_len);
+void denitron_scan_process_list(unsigned int ram_size_bytes, const char* proc_name);
 
 #endif
