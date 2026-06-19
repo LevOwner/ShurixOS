@@ -34,8 +34,7 @@
 
 ### 📦 Требования
 
-- **QEMU** (эмулятор)
-- **GCC + NASM** (компиляторы)
+- **NASM** (компилятор)
 - **i686-elf-gcc** (кросс-компилятор)
 
 ### 🔧 Сборка
@@ -44,3 +43,10 @@
 git clone https://github.com/LevOwner/ShurixOS.git
 cd ShurixOS
 ./build.bat
+```
+
+---
+
+## Если вам лень собирать:
+
+- **То вам надо обратиться в раздел релизы [Releases] https://github.com/LevOwner/ShurixOS/releases** 
