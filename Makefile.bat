@@ -47,12 +47,20 @@ echo [10] Компиляция lib/cosa.c...
 i686-elf-gcc -ffreestanding -m32 -nostdlib -nostdinc -fno-pie -fno-stack-protector -c lib/cosa.c -o cosa.o -Iinclude
 if errorlevel 1 goto error
 
-echo [11] Компиляция kernel/kernel.c...
+echo [11] Компиляция ss/crypto.c...
+i686-elf-gcc -ffreestanding -m32 -nostdlib -nostdinc -fno-pie -fno-stack-protector -c ss/crypto.c -o crypto.o -Iinclude
+if errorlevel 1 goto error
+
+echo [12] Компиляция ss/denitron.c...
+i686-elf-gcc -ffreestanding -m32 -nostdlib -nostdinc -fno-pie -fno-stack-protector -c ss/denitron.c -o denitron.o -Iinclude
+if errorlevel 1 goto error
+
+echo [13] Компиляция kernel/kernel.c...
 i686-elf-gcc -ffreestanding -m32 -nostdlib -nostdinc -fno-pie -fno-stack-protector -c kernel/kernel.c -o kernel.o -Iinclude
 if errorlevel 1 goto error
 
-echo [12] Линковка ядра...
-i686-elf-ld -m elf_i386 -T linker.ld -o shurix.elf boot.o kernel.o string.o cfs.o hsfs.o container.o menu.o keyboard.o vm.o kafos.o cosa.o
+echo [14] Линковка ядра...
+i686-elf-ld -m elf_i386 -T linker.ld -o shurix.elf boot.o kernel.o string.o cfs.o hsfs.o container.o menu.o keyboard.o vm.o kafos.o cosa.o crypto.o denitron.o
 if errorlevel 1 goto error
 
 echo.
@@ -62,8 +70,8 @@ echo   Запуск в QEMU...
 echo ==============================
 echo.
 
-echo [13] Запуск в QEMU...
-qemu-system-i386 -kernel shurix.elf -vga std -no-reboot
+echo [15] Запуск в QEMU...
+qemu-system-i386 -kernel shurix.elf -vga std -no-reboot -accel tcg,one-insn-per-tb=on
 
 :error
 if errorlevel 1 (

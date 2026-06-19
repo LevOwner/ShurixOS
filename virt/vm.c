@@ -1,5 +1,6 @@
 #include "vm.h"
 #include "../ui/menu.h"
+#include "../lib/string.h"  // ← это не <string.h>, а твой собственный
 
 static int vm_mode = VM_MODE_KVM;
 
@@ -49,6 +50,11 @@ static uint64_t vmcs_read(uint32_t field) {
     uint64_t value;
     __asm__ volatile ("vmread %1, %0" : "=r"(value) : "r"(field));
     return value;
+}
+
+static void print_color_full_char(char c, uint8_t fg, uint8_t bg) {
+    uint8_t combined = (bg << 4) | fg;
+    vga_putchar(c, combined);
 }
 
 static int kvm_init(void) {
@@ -142,11 +148,6 @@ static void emulate_guest(void) {
     }
 }
 
-// Для вывода одного символа с фоном
-static void print_color_full_char(char c, uint8_t fg, uint8_t bg) {
-    uint8_t combined = (bg << 4) | fg;
-    vga_putchar(c, combined);
-}
 
 int vm_init(void) {
     if (vm_mode == VM_MODE_EMU) {

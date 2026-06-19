@@ -9,5 +9,6 @@
 int vm_init(void);
 int vm_launch(void);
 void vm_set_mode(int mode);
+int vm_check_kvm(void);
 
 #endif

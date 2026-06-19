@@ -7,7 +7,10 @@
 #define VGA_COLS 80
 #define VGA_ROWS 25
 static uint16_t *vga = (uint16_t*)0xB8000;
-static int cursor_x = 0, cursor_y = 0;
+
+// Глобальные переменные (без static)
+int cursor_x = 0;
+int cursor_y = 0;
 
 static inline void outb(uint16_t port, uint8_t val) {
     __asm__ volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
@@ -20,6 +23,15 @@ void vga_clear_blue(void) {
     cursor_x = 0;
     cursor_y = 0;
 }
+
+void vga_delete_char(void) {
+    if (cursor_x > 0) {
+        cursor_x--;
+        vga_putchar(' ', 0x0F);
+        cursor_x--;
+    }
+}
+
 
 void vga_putchar(char c, uint8_t color) {
     if (c == '\n') { cursor_x = 0; cursor_y++; return; }

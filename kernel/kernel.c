@@ -4,102 +4,117 @@
 #include "../fs/hsfs.h"
 #include "../lib/cosa.h"
 #include "../lib/string.h"
+#include "../virt/vm.h"
+#include "../drivers/kafos.h"
+#include "../drivers/keyboard.h"
+#include "../ss/crypto.h"
+#include "../ss/denitron.h"
+
+// Внешние переменные из menu.c (для управления курсором)
+extern int cursor_x;
+extern int cursor_y;
+
+// Функция удаления символа (из menu.c)
+extern void vga_delete_char(void);
 
 void kernel_main() {
+    // ============================================================
+    // 1. ИНИЦИАЛИЗАЦИЯ ФАЙЛОВЫХ СИСТЕМ
+    // ============================================================
     cfs_t cfs;
     hsfs_t hsfs;
     cfs_format(&cfs, 0);
     hsfs_format(&hsfs, 0);
 
     // ============================================================
-    // ТЕСТ HSFS (без .cosa)
+    // 2. ИНИЦИАЛИЗАЦИЯ БЕЗОПАСНОСТИ (CRYPTO + DENITRON)
     // ============================================================
-    char original[] = "SHURIX TEST 123!";
-    hsfs_write(&hsfs, "test.txt", original, sizeof(original));
+    print_color_full("SHURIXOS: initializing security...\n", 0x0F, 0x01);
 
-    char buffer[128] = {0};
-    int size = hsfs_read(&hsfs, "test.txt", buffer, sizeof(buffer));
+    // Запрос пароля для шифрования диска (с поддержкой Backspace)
+    print_color_full("Enter disk password: ", 0x0F, 0x01);
+    char password[32];
+    int i = 0;
+    while (1) {
+        char c = getchar();
 
-    print("Original: ");
-    print(original);
-    print("\n");
-
-    print("Read: ");
-    print(buffer);
-    print("\n");
-
-    if (size > 0) {
-        print("HEX original: ");
-        for (int i = 0; i < sizeof(original) && i < 16; i++) {
-            print_int((unsigned char)original[i]);
-            print(" ");
+        if (c == 13) { // Enter
+            password[i] = '\0';
+            break;
         }
-        print("\n");
 
-        print("HEX read: ");
-        for (int i = 0; i < size && i < 16; i++) {
-            print_int((unsigned char)buffer[i]);
-            print(" ");
+        if (c == 8) { // Backspace
+            if (i > 0) {
+                i--;
+                vga_delete_char();
+            }
+            continue;
         }
-        print("\n");
+
+        if (i < 31) {
+            password[i++] = c;
+            vga_putchar('*', 0x0F);
+        }
     }
+    vga_putchar('\n', 0x0F);
+
+    crypto_derive_key(password);
+    print_color_full("Crypto: AES-256 key derived\n", 0x0A, 0x01);
+
+    // Инициализация Denitron (агенты безопасности)
+    denitron_register(0, "kernel", "system", "core");
+    denitron_register(1, "init", "system", "boot");
+    denitron_register(2, "shurix", "system", "hypervisor");
+    print_color_full("Denitron: security agents active\n", 0x0A, 0x01);
 
     // ============================================================
-    // ТЕСТ .COSA (с HSFS)
+    // 3. ТЕСТОВЫЙ СКАНИРОВАНИЕ DENITRON
+    // ============================================================
+    denitron_scan_all();
+    denitron_status();
+
+    // ============================================================
+    // 4. ТЕСТ .COSA (УПАКОВКА / РАСПАКОВКА)
     // ============================================================
     char test_data[] = "Hello SHURIX!";
     cosa_pack(test_data, sizeof(test_data), "test.cosa");
 
-    char cosa_buffer[128] = {0};
-    int result = cosa_unpack("test.cosa", cosa_buffer, sizeof(cosa_buffer));
+    char buffer[128] = {0};
+    int result = cosa_unpack("test.cosa", buffer, sizeof(buffer));
 
-    print("COSA result: ");
-    print_int(result);
-    print("\n");
-
+    print_color_full("COSA test: ", 0x0F, 0x01);
     if (result > 0) {
-        print("COSA HEX: ");
-        for (int i = 0; i < result && i < 16; i++) {
-            print_int((unsigned char)cosa_buffer[i]);
-            print(" ");
-        }
-        print("\n");
-
-        print("COSA string: ");
-        print(cosa_buffer);
-        print("\n");
+        print_color_full(buffer, 0x0A, 0x01);
     } else {
-        print("COSA unpack failed!\n");
+        print_color_full("FAILED\n", 0x0C, 0x01);
     }
-
-    // Проверяем, что файл test.cosa существует в HSFS
-hsfs_list(&hsfs);
-
-// Читаем test.cosa напрямую (без распаковки)
-uint8_t raw_data[256] = {0};
-int raw_size = hsfs_read(&hsfs, "test.cosa", raw_data, sizeof(raw_data));
-print("Raw test.cosa size: ");
-print_int(raw_size);
-print("\n");
-
-print("Raw HEX: ");
-for (int i = 0; i < raw_size && i < 16; i++) {
-    print_int(raw_data[i]);
-    print(" ");
-}
-print("\n");
+    print_color_full("\n", 0x0F, 0x01);
 
     // ============================================================
-    // КОНТЕЙНЕРЫ
+    // 5. ВИРТУАЛИЗАЦИЯ (KVM / EMU)
+    // ============================================================
+    if (vm_check_kvm()) {
+        print_color_full("KVM available\n", 0x0A, 0x01);
+        vm_set_mode(VM_MODE_KVM);
+    } else {
+        print_color_full("KVM not available, using emulation\n", 0x0E, 0x01);
+        vm_set_mode(VM_MODE_EMU);
+    }
+    vm_init();
+
+    // ============================================================
+    // 6. КОНТЕЙНЕРЫ
     // ============================================================
     container_create("Ubuntu", 2048, 2);
     container_create("Windows", 4096, 4);
     container_set_default(0);
 
     // ============================================================
-    // МЕНЮ
+    // 7. МЕНЮ
     // ============================================================
-    menu_main();
+    
 
-    while (1) {}
+    while (1) {
+        __asm__ volatile ("hlt");
+    }
 }
