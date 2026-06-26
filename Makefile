@@ -1,5 +1,5 @@
 # ============================================================
-# SHURIXOS - Makefile
+# SHURIXOS - Makefile (с папками)
 # ============================================================
 
 CC = i686-elf-gcc
@@ -8,20 +8,18 @@ LD = i686-elf-ld
 CFLAGS = -ffreestanding -m32 -nostdlib -nostdinc -fno-pie -fno-stack-protector -Iinclude
 LDFLAGS = -m elf_i386 -T linker.ld
 
-# Объектные файлы (все .o)
-OBJS = boot.o kernel.o init.o string.o cfs.o hsfs.o container.o keyboard.o vm.o kafos.o menu.o cosa.o crypto.o process.o thread.o
-
-# ============================================================
-# ПРАВИЛА
-# ============================================================
+# Объектные файлы
+OBJS = boot/boot.o kernel/kernel.o kernel/init.o lib/string.o fs/cfs.o fs/hsfs.o \
+       container/container.o drivers/keyboard.o virt/vm.o drivers/kafos.o ui/menu.o \
+       lib/cosa.o ss/crypto.o kernel/process.o kernel/thread.o
 
 all: shurix.elf
 
-# Компиляция .c → .o
+# Сборка .c → .o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
-# Компиляция .asm → .o
+# Сборка .asm → .o
 %.o: %.asm
 	$(ASM) -f elf32 $< -o $@
 
@@ -29,11 +27,9 @@ all: shurix.elf
 shurix.elf: $(OBJS)
 	$(LD) $(LDFLAGS) -o $@ $^
 
-# Очистка
 clean:
-	rm -f *.o *.elf *.bin *.img
+	rm -f $(OBJS) shurix.elf shurix.bin shurix.img
 
-# Запуск
 run: shurix.elf
 	qemu-system-i386 -kernel shurix.elf -vga std -no-reboot -m 128
 
