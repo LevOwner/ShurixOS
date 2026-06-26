@@ -1,14 +1,18 @@
-; boot.asm – Multiboot загрузчик
 section .multiboot
 align 4
     MAGIC    equ 0x1BADB002
-    FLAGS    equ 0x00000001        ; только выравнивание
+    FLAGS    equ 0x00000004        ; добавить VBE
     CHECKSUM equ -(MAGIC + FLAGS)
 
     dd MAGIC
     dd FLAGS
     dd CHECKSUM
 
+    ; VBE (графика)
+    dd 0      ; mode type (0 = linear)
+    dd 1024   ; width
+    dd 768    ; height
+    dd 32     ; bpp
 section .text
 global _start
 extern kernel_main

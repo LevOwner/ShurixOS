@@ -71,7 +71,9 @@ echo [16] Компиляция ss/denitron.c...
 i686-elf-gcc -ffreestanding -m32 -nostdlib -nostdinc -fno-pie -fno-stack-protector -c ss/denitron.c -o denitron.o -Iinclude
 if errorlevel 1 goto error
 
-echo [17] Линковка ядра...
+
+
+echo [18] Линковка ядра...
 i686-elf-ld -m elf_i386 -T linker.ld -o shurix.elf boot.o denitron.o kernel.o init.o string.o cfs.o hsfs.o container.o keyboard.o vm.o kafos.o menu.o cosa.o crypto.o process.o thread.o
 if errorlevel 1 goto error
 

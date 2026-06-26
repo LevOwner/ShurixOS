@@ -81,17 +81,6 @@ void shurix_init(void) {
     container_set_default(0);
     print_color_full("Containers: ready\n", 0x0A, 0x01);
 
-    // ============================================================
-    // 5. ВИРТУАЛИЗАЦИЯ (KVM / EMU)
-    // ============================================================
-    if (vm_check_kvm()) {
-        print_color_full("KVM: available\n", 0x0A, 0x01);
-        vm_set_mode(VM_MODE_KVM);
-    } else {
-        print_color_full("KVM: not available, using emulation\n", 0x0E, 0x01);
-        vm_set_mode(VM_MODE_EMU);
-    }
-    vm_init();
 
     // ============================================================
     // 6. МЕНЮ

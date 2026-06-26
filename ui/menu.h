@@ -2,6 +2,7 @@
 #define MENU_H
 
 #include "../include/shurix.h"
+#include "../boot/multiboot.h"
 
 // Глобальные переменные
 extern int cursor_x;
@@ -16,5 +17,6 @@ void print_int(int n);
 void print_center(int y, const char *s, uint8_t color);
 void vga_delete_char(void);
 void menu_main(void);
+void init_graphics(multiboot_info_t* mbi);
 
 #endif
